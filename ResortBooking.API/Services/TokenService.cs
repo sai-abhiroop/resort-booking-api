@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using ResortBooking.API.Configuration;
 using ResortBooking.API.Data;
 using ResortBooking.API.Models;
 using ResortBooking.API.Services.IServices;
@@ -15,18 +17,20 @@ namespace ResortBooking.API.Services
     {
         private readonly ApplicationContext _db;
         private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSettings;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public TokenService(ApplicationContext db,IConfiguration configuration, UserManager<ApplicationUser> userManager)
+        public TokenService(ApplicationContext db,IConfiguration configuration, IOptions<JwtSettings> jwtOptions, UserManager<ApplicationUser> userManager)
         {
             _db= db;
             _configuration = configuration;
+            _jwtSettings = jwtOptions.Value;
             _userManager = userManager;
         }
 
         public async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
         {
-            var key = Encoding.ASCII.GetBytes(_configuration.GetSection("JwtSettings")["Secret"]);
+            var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
             var roles = await _userManager.GetRolesAsync(user);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -38,7 +42,7 @@ namespace ResortBooking.API.Services
                     new Claim(ClaimTypes.Role,roles.FirstOrDefault()),
                     new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(2),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var tokenHandler = new JwtSecurityTokenHandler();

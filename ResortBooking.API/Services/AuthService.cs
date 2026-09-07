@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
+using ResortBooking.API.Configuration;
 using ResortBooking.API.Data;
 using ResortBooking.API.Dtos;
 using ResortBooking.API.Models;
@@ -18,16 +20,16 @@ namespace ResortBooking.API.Services
         private readonly ApplicationContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly JwtSettings _jwtSettings;
         private readonly IMapper _mapper;
-        private readonly IConfiguration _configuration;
         private readonly ITokenService _tokenService;
-        public AuthService(ApplicationContext db, IMapper mapper,IConfiguration configuration, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, ITokenService tokenService)
+        public AuthService(ApplicationContext db, IMapper mapper,UserManager<ApplicationUser> userManager, IOptions<JwtSettings> jwtOptions, RoleManager<IdentityRole> roleManager, ITokenService tokenService)
         {
             _db = db;
             _userManager = userManager;
             _roleManager = roleManager;
+            _jwtSettings = jwtOptions.Value;
             _mapper = mapper;
-            _configuration = configuration;
             _tokenService = tokenService;
         }
         public async Task<bool> IsEmailExistsAsync(string email)
@@ -38,8 +40,12 @@ namespace ResortBooking.API.Services
         public async Task<TokenDto> LoginAsync(LoginRequestDto loginRequestDto)
         {
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+            if (user == null)
+            {
+                return null;
+            }
             var isCorrectPassword=await _userManager.CheckPasswordAsync(user,loginRequestDto.Password);
-            if(user ==null || !isCorrectPassword)
+            if(!isCorrectPassword)
             {
                 return null;
             } 
@@ -48,7 +54,7 @@ namespace ResortBooking.API.Services
             var jwtToken = tokenHandler.ReadJwtToken(token);
             var jwtTokenId =jwtToken.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti)?.Value;
             var newRefreshToken =await  _tokenService.GenerateRefreshTokenAsync();
-            var refreshTokenexpiryDate = DateTime.UtcNow.AddMinutes(5);
+            var refreshTokenexpiryDate = DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationMinutes);
             await _tokenService.SaveRefreshTokenAsync(user.Id,jwtTokenId,newRefreshToken, refreshTokenexpiryDate);
             var response= new TokenDto
             {
@@ -76,21 +82,21 @@ namespace ResortBooking.API.Services
                     NormalizedEmail=registrationRequestDto.Email.ToUpper(),
                     EmailConfirmed=true
                 };
-                var result= await _userManager.CreateAsync(user, registrationRequestDto.password);
+                var result= await _userManager.CreateAsync(user, registrationRequestDto.Password);
                 if (!result.Succeeded)
                 {
                     var errors = String.Join(",", result.Errors.Select(e => e.Description));
                     throw new InvalidOperationException($"Registration Failed: {errors}");
                 }
-                var role = String.IsNullOrEmpty(registrationRequestDto.Role) ? "Customer" : registrationRequestDto.Role;
-                if(!await _roleManager.RoleExistsAsync(role))
+                const string defaultRole = "Customer";
+                if(!await _roleManager.RoleExistsAsync(defaultRole))
                 {
-                    await _roleManager.CreateAsync(new IdentityRole(role));
+                    await _roleManager.CreateAsync(new IdentityRole(defaultRole));
                 }
-                await _userManager.AddToRoleAsync(user,role);
+                await _userManager.AddToRoleAsync(user,defaultRole);
 
                 var userDto= _mapper.Map<UserDto>(user);
-                userDto.Role = role;
+                userDto.Role = defaultRole;
                 return userDto;
             }
             catch(Exception ex)
@@ -133,7 +139,7 @@ namespace ResortBooking.API.Services
                 var jwtToken = tokenHandler.ReadJwtToken(token);
             
                 var newRefreshToken = await _tokenService.GenerateRefreshTokenAsync();
-                var refreshTokenexpiryDate = DateTime.UtcNow.AddMinutes(5);
+                var refreshTokenexpiryDate = DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationMinutes);
                 await _tokenService.SaveRefreshTokenAsync(user.Id, tokenFamilyId, newRefreshToken, refreshTokenexpiryDate);
                 var response = new TokenDto
                 {

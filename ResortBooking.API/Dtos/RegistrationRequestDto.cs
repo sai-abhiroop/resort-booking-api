@@ -13,10 +13,7 @@ namespace ResortBooking.API.Dtos
         public required string Email { get; set; }
 
         [Required]
-        public required string password { get; set; }
-
-        [MaxLength(50)]
-        public string Role { get; set; } = "Customer";
+        public required string Password { get; set; }
 
     }
 }
