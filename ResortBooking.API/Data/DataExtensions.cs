@@ -97,6 +97,11 @@ namespace ResortBooking.API.Data
             builder.Services.AddScoped<IVillaService, VillaService>();
         }
 
+        public static void RegisterAmenitiesService(this WebApplicationBuilder builder)
+        {
+            builder.Services.AddScoped<IAmenitiesService, AmenitiesService>();
+        }
+
         public static void MigrateDb(this WebApplication app)
         {
             using(var scope = app.Services.CreateScope())

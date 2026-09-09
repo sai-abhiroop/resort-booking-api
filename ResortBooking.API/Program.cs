@@ -133,6 +133,7 @@ builder.RegisterAuthService();
 builder.RegisterImageService();
 builder.RegisterTokenService();
 builder.RegisterVillaService();
+builder.RegisterAmenitiesService();
 
 var app = builder.Build();
 

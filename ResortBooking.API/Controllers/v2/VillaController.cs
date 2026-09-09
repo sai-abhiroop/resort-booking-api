@@ -18,16 +18,11 @@ namespace ResortBooking.API.Controllers.v2
     //[Authorize(Roles="Customer,Admnin")]
     public class VillaController : ControllerBase
     {
-        private readonly ApplicationContext _db;
-        private readonly IMapper _mapper;
-        private readonly IImageService _imageService;
         private readonly IVillaService _villaService;
+
         #region Constructor
-        public VillaController(ApplicationContext db, IMapper mapper,IImageService imageService,IVillaService villaService)
+        public VillaController(IVillaService villaService)
         {
-            _db = db;
-            _mapper = mapper;
-            _imageService = imageService;
             _villaService = villaService;
         }
         #endregion
@@ -76,13 +71,12 @@ namespace ResortBooking.API.Controllers.v2
                 return BadRequest(ApiResponse<object>.BadRequest(errors: "Villa Id value should be greater than 0"));
             }
 
-            var villa = await _villaService.GetVillaByIdAsync(id);
+            var villaDto = await _villaService.GetVillaByIdAsync(id);
 
-            if (villa == null)
+            if (villaDto == null)
             {
                 return NotFound(ApiResponse<object>.NotFound(errors: $"Villa with Id {id} does not exist"));
             }
-            var villaDto = _mapper.Map<VillaDetailsDto>(villa);
             var response = ApiResponse<VillaDetailsDto>.Ok(villaDto, $"Villa with Id: {id} Retrieved Successfully");
             return Ok(response);
         }

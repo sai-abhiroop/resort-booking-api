@@ -37,7 +37,7 @@ namespace ResortBooking.API.Services
             return await _db.ApplicationUsers.AnyAsync(u=>u.Email.ToLower()==email.ToLower());
         }
 
-        public async Task<TokenDto> LoginAsync(LoginRequestDto loginRequestDto)
+        public async Task<TokenDto?> LoginAsync(LoginRequestDto loginRequestDto)
         {
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
             if (user == null)

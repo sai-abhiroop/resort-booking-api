@@ -6,10 +6,10 @@ namespace ResortBooking.API.Services.IServices
     {
        Task<UserDto?> RegisterAsync(RegistrationRequestDto registrationRequestDto);  
         
-       Task<TokenDto> LoginAsync(LoginRequestDto loginRequestDto);
+       Task<TokenDto?> LoginAsync(LoginRequestDto loginRequestDto);
 
        Task<bool> IsEmailExistsAsync(string email);
 
-        Task<TokenDto> RefreshAccessTokenAsync(RefreshTokenRequestDto refreshTokenRequestDto);
+        Task<TokenDto?> RefreshAccessTokenAsync(RefreshTokenRequestDto refreshTokenRequestDto);
     }
 }
