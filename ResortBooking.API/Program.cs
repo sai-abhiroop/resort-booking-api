@@ -7,13 +7,14 @@ using Microsoft.OpenApi;
 using ResortBooking.API.Configuration;
 using ResortBooking.API.Data;
 using ResortBooking.API.Dtos;
+using ResortBooking.API.Infrastructure;
 using ResortBooking.API.Models;
 using Scalar.AspNetCore;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
+if (jwtSettings!=null && string.IsNullOrWhiteSpace(jwtSettings.Secret))
 {
     throw new InvalidOperationException("Jwt Secret is not Configured");
 }
@@ -58,6 +59,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 
 var builderProvider = builder.Services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
@@ -110,7 +113,12 @@ builder.Services.AddAutoMapper(o =>
 {
     o.CreateMap<Villa, CreateVillaDto>().ReverseMap();
     o.CreateMap<Villa,VillaDetailsDto>().ReverseMap();
-    o.CreateMap<Villa, UpdateVillaDto>().ReverseMap();
+    o.CreateMap<Villa, UpdateVillaDto>();
+    o.CreateMap<UpdateVillaDto, Villa>()
+    .ForMember(
+        dest => dest.ImageUrl,
+        opt => opt.Ignore()
+     );
     o.CreateMap<ApplicationUser, UserDto>().ReverseMap();
     o.CreateMap<VillaAmenities, AmenitiesDetailsDto>()
     .ForMember(
@@ -124,6 +132,7 @@ builder.Services.AddAutoMapper(o =>
 builder.RegisterAuthService();
 builder.RegisterImageService();
 builder.RegisterTokenService();
+builder.RegisterVillaService();
 
 var app = builder.Build();
 
@@ -150,6 +159,8 @@ if (app.Environment.IsDevelopment())
 app.MigrateDb();
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler();
 
 app.UseAuthentication();
 

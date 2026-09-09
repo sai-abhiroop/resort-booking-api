@@ -2,12 +2,12 @@
 {
     public class ApiResponse<TData>
     {
-        public bool Success { get; set; }
-        public int Status { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public TData? Data {  get; set; }
-        public object? Errors {  get; set; }
-        public DateTime TimeStamp { get; set; }= DateTime.UtcNow;
+        public bool Success { get; init; }
+        public int Status { get; init; }
+        public string Message { get; init; } = string.Empty;
+        public TData? Data {  get; init; }
+        public object? Errors {  get; init; }
+        public DateTime TimeStamp { get; init; }= DateTime.UtcNow;
 
         public static ApiResponse<TData> Create(bool success,int status, string message, TData? data=default, object? errors = null)
         {
@@ -20,7 +20,7 @@
                 Errors= errors
             };
         }
-        public static ApiResponse<TData> Ok(TData? data=default,string message="Retirved Successfully") => Create(true,200,message,data);
+        public static ApiResponse<TData> Ok(TData? data=default,string message="Retrieved Successfully") => Create(true,200,message,data);
 
         public static ApiResponse<TData> CreatedAt(TData? data=default, string message = "Record Created Successfully") => Create(true, 201, message, data);
 

@@ -18,22 +18,22 @@ namespace ResortBooking.API.Controllers
         
         [HttpPost("register")]
         [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<Object>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse<Object>), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<ApiResponse<UserDto>>> Register(RegistrationRequestDto registrationRequestDto)
         {
             if(registrationRequestDto == null)
             {
-                return BadRequest(ApiResponse<Object>.BadRequest(errors: "Registartion Data is required"));
+                return BadRequest(ApiResponse<object>.BadRequest(errors: "Registartion Data is required"));
             } 
             if(await _authService.IsEmailExistsAsync(registrationRequestDto.Email))
             {
-                return Conflict(ApiResponse<Object>.Conflict(errors: $"A User with Email: {registrationRequestDto.Email} already exists"));
+                return Conflict(ApiResponse<object>.Conflict(errors: $"A User with Email: {registrationRequestDto.Email} already exists"));
             }
             var user =await _authService.RegisterAsync(registrationRequestDto);
             if (user == null)
             {
-                return BadRequest(ApiResponse<Object>.BadRequest(errors: "Registartion Failed"));
+                return BadRequest(ApiResponse<object>.BadRequest(errors: "Registartion Failed"));
             }
             var response = ApiResponse<UserDto>.CreatedAt(user, "User Registerd Sucessfully");
             return CreatedAtAction(nameof(Register),response);
@@ -41,17 +41,17 @@ namespace ResortBooking.API.Controllers
 
         [HttpPost("login")]
         [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiResponse<Object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<ApiResponse<TokenDto>>> Login(LoginRequestDto loginRequestDto)
         {
             if (loginRequestDto == null)
             {
-                return BadRequest(ApiResponse<Object>.BadRequest(errors: "Login information is required"));
+                return BadRequest(ApiResponse<object>.BadRequest(errors: "Login information is required"));
             }
             var loginResponse=await _authService.LoginAsync(loginRequestDto);
             if(loginResponse== null)
             {
-                return BadRequest(ApiResponse<Object>.BadRequest(errors: "Login Failed. Please Check your credentials"));
+                return BadRequest(ApiResponse<object>.BadRequest(errors: "Login Failed. Please Check your credentials"));
             }
             var response = ApiResponse<TokenDto>.Ok(loginResponse, "User login Successful");
             return Ok(response);
@@ -59,13 +59,13 @@ namespace ResortBooking.API.Controllers
 
         [HttpPost("refresh-token")]
         [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ApiResponse<Object>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiResponse<Object>), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
         public async Task<ActionResult<ApiResponse<TokenDto>>> RefreshAccessToken(RefreshTokenRequestDto refreshTokenRequestDto)
         {
             if (refreshTokenRequestDto == null || string.IsNullOrEmpty(refreshTokenRequestDto.RefreshToken))
             {
-                return BadRequest(ApiResponse<Object>.BadRequest(errors: "Refresh Token is required"));
+                return BadRequest(ApiResponse<object>.BadRequest(errors: "Refresh Token is required"));
             }
             var tokenResponse = await _authService.RefreshAccessTokenAsync(refreshTokenRequestDto);
             if(tokenResponse== null)

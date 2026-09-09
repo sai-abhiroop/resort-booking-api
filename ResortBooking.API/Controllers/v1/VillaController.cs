@@ -13,12 +13,12 @@ namespace ResortBooking.API.Controllers.v1
     [ApiController]
     [ApiVersion("1.0")]
     [Route("/api/v{version:apiversion}/villa")]
-    public class ResortBookingController : ControllerBase
+    public class VillaController : ControllerBase
     {
         private readonly ApplicationContext _db;
         private readonly IMapper _mapper;
         #region Constructor
-        public ResortBookingController(ApplicationContext db, IMapper mapper)
+        public VillaController(ApplicationContext db, IMapper mapper)
         {
             _db = db;
             _mapper = mapper;
