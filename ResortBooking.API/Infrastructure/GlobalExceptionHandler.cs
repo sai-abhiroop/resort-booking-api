@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using ResortBooking.API.Dtos;
 
 namespace ResortBooking.API.Infrastructure
 {
@@ -10,26 +11,25 @@ namespace ResortBooking.API.Infrastructure
             logger.LogError(exception,"Unhandled exception while processing {Method} {Path}",httpContext.Request.Method,httpContext.Request.Path);
             var statusCode = exception switch
             {
-                ArgumentException =>StatusCodes.Status400BadRequest,
+                ArgumentException => StatusCodes.Status400BadRequest,
 
-                InvalidOperationException =>StatusCodes.Status400BadRequest,
+                KeyNotFoundException => StatusCodes.Status404NotFound,
 
-                _ =>StatusCodes.Status500InternalServerError
+                InvalidOperationException => StatusCodes.Status409Conflict,
+
+                _ => StatusCodes.Status500InternalServerError
             };
-
-            var problemDetails = new ProblemDetails
+            var message = statusCode switch
             {
-                Status = statusCode,
-
-                Title = statusCode ==StatusCodes.Status500InternalServerError? "An unexpected error occurred." : "The request could not be completed.",
-
-                Detail = statusCode ==StatusCodes.Status500InternalServerError ? "An unexpected error occurred while processing the request." : exception.Message,
-
-                Instance = httpContext.Request.Path
+                StatusCodes.Status400BadRequest => "The request could not be completed.",
+                StatusCodes.Status404NotFound => "The requested resource was not found.",
+                StatusCodes.Status409Conflict => "The request conflicts with the current state of the resource.",
+                _ => "An unexpected error occurred while processing the request."
             };
-
+            var errors = statusCode == StatusCodes.Status500InternalServerError? null: exception.Message;
+            var response=ApiResponse<object>.Error(statusCode, message, errors);
             httpContext.Response.StatusCode = statusCode;
-            await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+            await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
             return true;
         }
     }

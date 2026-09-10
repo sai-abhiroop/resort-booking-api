@@ -1,11 +1,6 @@
 ﻿using Asp.Versioning;
-using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ResortBooking.API.Data;
 using ResortBooking.API.Dtos;
-using ResortBooking.API.Models;
 using ResortBooking.API.Services.IServices;
 
 namespace ResortBooking.API.Controllers.v2

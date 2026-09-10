@@ -75,7 +75,7 @@ namespace ResortBooking.API.Services
             var isVillaExists = await _db.Villa.FirstOrDefaultAsync(a => a.Id == amenityDto.VillaId);
             if (isVillaExists == null)
             {
-                throw new InvalidOperationException($"A Villa with Id {amenity.VillaId} does not exist");
+                throw new KeyNotFoundException($"A Villa with Id {amenity.VillaId} does not exist");
             }
             _mapper.Map(amenityDto, amenity);
             amenity.UpdatedDate = DateTime.UtcNow;

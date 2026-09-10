@@ -1,13 +1,8 @@
 ﻿using Asp.Versioning;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ResortBooking.API.Data;
 using ResortBooking.API.Dtos;
-using ResortBooking.API.Models;
 using ResortBooking.API.Services.IServices;
-using System.Diagnostics.Eventing.Reader;
 using System.Text;
 
 namespace ResortBooking.API.Controllers.v2
@@ -84,7 +79,7 @@ namespace ResortBooking.API.Controllers.v2
 
         #region Create
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ApiResponse<VillaDetailsDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -111,7 +106,7 @@ namespace ResortBooking.API.Controllers.v2
 
         #region Update
         [HttpPut("{id:int}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -124,24 +119,13 @@ namespace ResortBooking.API.Controllers.v2
             {
                 return BadRequest(ApiResponse<object>.BadRequest(errors: "Villa Id value should be greater than 0"));
             }
-            try
+            var updatedresult = await _villaService.UpdateVillaAsync(id, villaDto);
+            if (updatedresult == false)
             {
-                var updatedresult = await _villaService.UpdateVillaAsync(id, villaDto);
-                if (updatedresult == false)
-                {
-                    return NotFound(ApiResponse<object>.NotFound(errors: $"Villa with Id: {id} not found"));
-                }
-                var response = ApiResponse<object>.NoContent(message: $"Villa with Id: {id} updated successfully");
-                return Ok(response);
+                return NotFound(ApiResponse<object>.NotFound(errors: $"Villa with Id: {id} not found"));
             }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ApiResponse<object>.Conflict(errors: ex.Message));
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ApiResponse<object>.BadRequest(ex.Message));
-            }
+            var response = ApiResponse<object>.NoContent(message: $"Villa with Id: {id} updated successfully");
+            return Ok(response);
         }
         #endregion
 

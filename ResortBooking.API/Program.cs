@@ -60,7 +60,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 
 var builderProvider = builder.Services.BuildServiceProvider().GetRequiredService<IApiVersionDescriptionProvider>();
@@ -161,7 +160,20 @@ app.MigrateDb();
 
 app.UseHttpsRedirection();
 
-app.UseExceptionHandler();
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.StatusCode =
+            StatusCodes.Status500InternalServerError;
+
+        var response = ApiResponse<object>.Error(
+            StatusCodes.Status500InternalServerError,
+            "An unexpected error occurred while processing the request.");
+
+        await context.Response.WriteAsJsonAsync(response);
+    });
+});
 
 app.UseAuthentication();
 

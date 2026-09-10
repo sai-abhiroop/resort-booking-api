@@ -6,9 +6,9 @@ namespace ResortBooking.API.Dtos
     {
         [Required]
         [MaxLength(100)]
-        public required string Name { get; set; }
+        public required string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
-        [Required]
+        [Range(1, int.MaxValue)]
         public int VillaId { get; set; }
     }
 }
