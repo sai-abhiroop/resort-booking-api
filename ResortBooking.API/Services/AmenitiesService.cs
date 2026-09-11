@@ -36,8 +36,9 @@ namespace ResortBooking.API.Services
         public async Task<AmenitiesDetailsDto?> GetAmenitiesByIdAsync(int id)
         {
             var amenity = await _db.VillaAmenities
-                                                 .AsNoTracking()
-                                                 .FirstOrDefaultAsync(a => a.Id == id);
+                                   .AsNoTracking()
+                                   .Include(a => a.Villa)
+                                   .FirstOrDefaultAsync(a => a.Id == id);
             if (amenity == null)
             {
                 return null;
@@ -49,6 +50,7 @@ namespace ResortBooking.API.Services
         {
             var amenities = await _db.VillaAmenities
                                 .AsNoTracking()
+                                .Include(a => a.Villa)
                                 .ToListAsync();
             return _mapper.Map<IEnumerable<AmenitiesDetailsDto>>(amenities);
         }

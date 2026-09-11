@@ -10,7 +10,6 @@ namespace ResortBooking.API.Controllers.v2
     [ApiController]
     [ApiVersion("2.0")]
     [Route("/api/v{version:apiversion}/villa")]
-    //[Authorize(Roles="Customer,Admnin")]
     public class VillaController : ControllerBase
     {
         private readonly IVillaService _villaService;
@@ -54,7 +53,6 @@ namespace ResortBooking.API.Controllers.v2
 
         #region GetById
         [HttpGet("{id:int}")]
-        //[AllowAnonymous]
         [ProducesResponseType(typeof(ApiResponse<VillaDetailsDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
@@ -79,7 +77,7 @@ namespace ResortBooking.API.Controllers.v2
 
         #region Create
         [HttpPost]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ApiResponse<VillaDetailsDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -106,14 +104,14 @@ namespace ResortBooking.API.Controllers.v2
 
         #region Update
         [HttpPut("{id:int}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateVilla(int id, [FromForm]UpdateVillaDto villaDto)
+        public async Task<ActionResult> UpdateVilla(int id, [FromForm]UpdateVillaDto villaDto)
         {
             if (id <= 0)
             {
@@ -124,19 +122,18 @@ namespace ResortBooking.API.Controllers.v2
             {
                 return NotFound(ApiResponse<object>.NotFound(errors: $"Villa with Id: {id} not found"));
             }
-            var response = ApiResponse<object>.NoContent(message: $"Villa with Id: {id} updated successfully");
-            return Ok(response);
+            return NoContent();
         }
         #endregion
 
         #region Delete
         [HttpDelete("{id:int}")]
-        //[Authorize(Roles = "Admin")]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse<object>>> RemoveVilla(int id)
+        public async Task<ActionResult> RemoveVilla(int id)
         {
             if (id <= 0)
             {
@@ -147,8 +144,7 @@ namespace ResortBooking.API.Controllers.v2
             {
                 return NotFound(ApiResponse<object>.NotFound(errors: $"Villa with Id: {id} not found"));
             }
-            var response = ApiResponse<object>.NoContent(message: $"Villa with Id: {id} deleted successfully");
-            return Ok(response);
+            return NoContent();
         }
         #endregion
 

@@ -50,11 +50,11 @@ namespace ResortBooking.API.Services
                             villaQuery = villaQuery.Where(v => v.Sqft == sqft);
                         break;
                     case "minsqft":
-                        if (double.TryParse(filterQuery, out double minsqft))
+                        if (int.TryParse(filterQuery, out int minsqft))
                             villaQuery = villaQuery.Where(v => v.Sqft >= minsqft);
                         break;
                     case "maxsqft":
-                        if (double.TryParse(filterQuery, out double maxsqft))
+                        if (int.TryParse(filterQuery, out int maxsqft))
                             villaQuery = villaQuery.Where(v => v.Sqft <= maxsqft);
                         break;
                     case "occupancy":

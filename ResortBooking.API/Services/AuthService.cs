@@ -67,8 +67,6 @@ namespace ResortBooking.API.Services
 
         public async Task<UserDto?> RegisterAsync(RegistrationRequestDto registrationRequestDto)
         {
-            try
-            {
                 if (await IsEmailExistsAsync(registrationRequestDto.Email))
                 {
                     throw new InvalidOperationException($"A user with Email :{registrationRequestDto.Email} already Exists");
@@ -86,7 +84,7 @@ namespace ResortBooking.API.Services
                 if (!result.Succeeded)
                 {
                     var errors = String.Join(",", result.Errors.Select(e => e.Description));
-                    throw new InvalidOperationException($"Registration Failed: {errors}");
+                    throw new ArgumentException($"Registration failed: {errors}");
                 }
                 const string defaultRole = "Customer";
                 if(!await _roleManager.RoleExistsAsync(defaultRole))
@@ -98,17 +96,10 @@ namespace ResortBooking.API.Services
                 var userDto= _mapper.Map<UserDto>(user);
                 userDto.Role = defaultRole;
                 return userDto;
-            }
-            catch(Exception ex)
-            {
-                throw new InvalidOperationException("An unexpected error occured during user registration", ex);
-            }
         }
 
         public async Task<TokenDto?> RefreshAccessTokenAsync(RefreshTokenRequestDto refreshTokenRequestDto)
         {
-            try
-            {
                 if (string.IsNullOrEmpty(refreshTokenRequestDto.RefreshToken))
                     return null;
                //validate Refresh Token
@@ -148,11 +139,6 @@ namespace ResortBooking.API.Services
                     ExpiresAt = jwtToken.ValidTo
                 };
                 return response;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("An unexpected error occured during Access Token Refresh", ex);
-            }
         }
     }
 }

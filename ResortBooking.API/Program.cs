@@ -13,10 +13,29 @@ using Scalar.AspNetCore;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-if (jwtSettings!=null && string.IsNullOrWhiteSpace(jwtSettings.Secret))
+var jwtSettings = builder.Configuration
+    .GetSection("JwtSettings")
+    .Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JwtSettings configuration is missing.");
+if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
 {
-    throw new InvalidOperationException("Jwt Secret is not Configured");
+    throw new InvalidOperationException("Jwt Secret is not configured.");
+}
+if (string.IsNullOrWhiteSpace(jwtSettings.Issuer))
+{
+    throw new InvalidOperationException("Jwt Issuer is not configured.");
+}
+if (string.IsNullOrWhiteSpace(jwtSettings.Audience))
+{
+    throw new InvalidOperationException("Jwt Audience is not configured.");
+}
+if (jwtSettings.AccessTokenExpirationMinutes <= 0)
+{
+    throw new InvalidOperationException("Jwt Access Token expiration must be greater than 0.");
+}
+if (jwtSettings.RefreshTokenExpirationMinutes <= 0)
+{
+    throw new InvalidOperationException("Jwt Refresh Token expiration must be greater than 0.");
 }
 var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
 

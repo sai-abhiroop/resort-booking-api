@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResortBooking.API.Dtos;
 using ResortBooking.API.Services.IServices;
@@ -19,7 +20,7 @@ namespace ResortBooking.API.Controllers.v2
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<IEnumerable<AmenitiesDetailsDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<AmenitiesDetailsDto>>> GetAmenities()
+        public async Task<ActionResult<ApiResponse<IEnumerable<AmenitiesDetailsDto>>>> GetAmenities()
         {
             var amenitiesDetails =await _amenitiesService.GetAmenitiesDetailsAsync();
             return Ok(ApiResponse<IEnumerable<AmenitiesDetailsDto>>.Ok(amenitiesDetails,"Villa Amenities retrieved successfully"));
@@ -30,7 +31,7 @@ namespace ResortBooking.API.Controllers.v2
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<AmenitiesDetailsDto>> GetAmenitiesById(int id)
+        public async Task<ActionResult<ApiResponse<AmenitiesDetailsDto>>> GetAmenitiesById(int id)
         {
             if (id <= 0)
             {
@@ -45,30 +46,32 @@ namespace ResortBooking.API.Controllers.v2
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(ApiResponse<AmenitiesDetailsDto>),StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<AmenitiesDetailsDto>> CreateVillaAmenity(CreateAmenitiesDto amenitydto)
+        public async Task<ActionResult<ApiResponse<AmenitiesDetailsDto>>> CreateVillaAmenity(CreateAmenitiesDto amenityDto)
         {
-            if(amenitydto == null)
+            if(amenityDto == null)
             {
                 return BadRequest(ApiResponse<object>.BadRequest(errors: "Amenity Details are required"));
             }
-            var amenityDetails =await _amenitiesService.CreateVillaAmenityAsync(amenitydto);
+            var amenityDetails = await _amenitiesService.CreateVillaAmenityAsync(amenityDto);
             if (amenityDetails == null)
             {
-                return NotFound(ApiResponse<object>.NotFound(errors: $"A Villa with Id {amenitydto.VillaId} does not exist"));
+                return NotFound(ApiResponse<object>.NotFound(errors: $"A Villa with Id {amenityDto.VillaId} does not exist"));
             }
             return CreatedAtAction(nameof(GetAmenitiesById), new {id=amenityDetails.Id} ,ApiResponse<AmenitiesDetailsDto>.CreatedAt(amenityDetails,"Villa Amenity Created Successfully"));
         }
 
         [HttpPut("{id:int}")]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse<object>>> UpdateAmenity(int id,UpdateAmenitiesDto amenityDto)
+        public async Task<ActionResult> UpdateAmenity(int id,UpdateAmenitiesDto amenityDto)
         {
             if (id <= 0)
             {
@@ -78,16 +81,17 @@ namespace ResortBooking.API.Controllers.v2
             {
                 return BadRequest(ApiResponse<object>.BadRequest(errors: "Amenity Details are required"));
             }
-            var updated=await _amenitiesService.UpdateAmenityAsync(id,amenityDto);
+            var updated= await _amenitiesService.UpdateAmenityAsync(id,amenityDto);
             if (updated == false)
             {
                 return NotFound(ApiResponse<object>.NotFound(errors: $"Amenity with Id: {id} not found"));
             }
-            return Ok(ApiResponse<object>.NoContent());
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
-        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
@@ -102,8 +106,7 @@ namespace ResortBooking.API.Controllers.v2
             {
                 return NotFound(ApiResponse<object>.NotFound(errors: $"Amenity with Id: {id} not found"));
             }
-            var response = ApiResponse<object>.NoContent(message: $"Amenity with Id: {id} deleted successfully");
-            return Ok(response);
+            return NoContent();
         }
     }
 }
