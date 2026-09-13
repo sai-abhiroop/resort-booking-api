@@ -11,25 +11,27 @@ namespace ResortBooking.API.Services
     {
         private readonly ApplicationContext _db;
         private readonly IMapper _mapper;
-
-        public AmenitiesService(ApplicationContext db,IMapper mapper)
+        private readonly ILogger<AmenitiesService> _logger;
+        public AmenitiesService(ApplicationContext db,IMapper mapper,ILogger<AmenitiesService> logger)
         {
             _db = db;
             _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<AmenitiesDetailsDto?> CreateVillaAmenityAsync(CreateAmenitiesDto amenitydto)
+        public async Task<AmenitiesDetailsDto?> CreateVillaAmenityAsync(CreateAmenitiesDto amenityDto)
         {
-            var isVillaExists = await _db.Villa.FirstOrDefaultAsync(a => a.Id == amenitydto.VillaId);
+            var isVillaExists = await _db.Villa.FirstOrDefaultAsync(a => a.Id == amenityDto.VillaId);
             if (isVillaExists == null)
             {
                 return null;
             }
-            var newamenity = _mapper.Map<VillaAmenities>(amenitydto);
+            var newamenity = _mapper.Map<VillaAmenities>(amenityDto);
             newamenity.CreatedDate = DateTime.UtcNow;
             newamenity.UpdatedDate = DateTime.UtcNow;
             await _db.VillaAmenities.AddAsync(newamenity);
             await _db.SaveChangesAsync();
+            _logger.LogInformation("Amenity created successfully with Id {Id} fo villaId {villaId}", newamenity.Id, newamenity.VillaId);
             return _mapper.Map<AmenitiesDetailsDto>(newamenity);
         }
 
@@ -64,6 +66,7 @@ namespace ResortBooking.API.Services
             }
             _db.VillaAmenities.Remove(amenity);
             await _db.SaveChangesAsync();
+            _logger.LogInformation("Amenity with Id {Id} deleted successfully", amenity.Id);
             return true;
         }
 
@@ -77,11 +80,12 @@ namespace ResortBooking.API.Services
             var isVillaExists = await _db.Villa.FirstOrDefaultAsync(a => a.Id == amenityDto.VillaId);
             if (isVillaExists == null)
             {
-                throw new KeyNotFoundException($"A Villa with Id {amenity.VillaId} does not exist");
+                throw new KeyNotFoundException($"A Villa with Id {amenityDto.VillaId} does not exist");
             }
             _mapper.Map(amenityDto, amenity);
             amenity.UpdatedDate = DateTime.UtcNow;
             await _db.SaveChangesAsync();
+            _logger.LogInformation("Amenity with Id {Id} updated successfully", amenity.Id);
             return true;
         }
     }

@@ -16,14 +16,12 @@ namespace ResortBooking.API.Services
     public class TokenService : ITokenService
     {
         private readonly ApplicationContext _db;
-        private readonly IConfiguration _configuration;
         private readonly JwtSettings _jwtSettings;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public TokenService(ApplicationContext db,IConfiguration configuration, IOptions<JwtSettings> jwtOptions, UserManager<ApplicationUser> userManager)
+        public TokenService(ApplicationContext db, IOptions<JwtSettings> jwtOptions, UserManager<ApplicationUser> userManager)
         {
-            _db= db;
-            _configuration = configuration;
+            _db = db;
             _jwtSettings = jwtOptions.Value;
             _userManager = userManager;
         }

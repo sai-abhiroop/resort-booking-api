@@ -2,16 +2,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.Identity.Client;
-using Microsoft.IdentityModel.Tokens;
 using ResortBooking.API.Configuration;
 using ResortBooking.API.Data;
 using ResortBooking.API.Dtos;
 using ResortBooking.API.Models;
 using ResortBooking.API.Services.IServices;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace ResortBooking.API.Services
 {
@@ -23,7 +19,8 @@ namespace ResortBooking.API.Services
         private readonly JwtSettings _jwtSettings;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        public AuthService(ApplicationContext db, IMapper mapper,UserManager<ApplicationUser> userManager, IOptions<JwtSettings> jwtOptions, RoleManager<IdentityRole> roleManager, ITokenService tokenService)
+        private readonly ILogger<AuthService> _logger;
+        public AuthService(ApplicationContext db, IMapper mapper,UserManager<ApplicationUser> userManager, IOptions<JwtSettings> jwtOptions, RoleManager<IdentityRole> roleManager, ITokenService tokenService,ILogger<AuthService> logger)
         {
             _db = db;
             _userManager = userManager;
@@ -31,6 +28,7 @@ namespace ResortBooking.API.Services
             _jwtSettings = jwtOptions.Value;
             _mapper = mapper;
             _tokenService = tokenService;
+            _logger = logger;
         }
         public async Task<bool> IsEmailExistsAsync(string email)
         {
@@ -42,11 +40,13 @@ namespace ResortBooking.API.Services
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
             if (user == null)
             {
+                _logger.LogWarning("Login failed for email {Email}: invalid credentials", loginRequestDto.Email);
                 return null;
             }
             var isCorrectPassword=await _userManager.CheckPasswordAsync(user,loginRequestDto.Password);
             if(!isCorrectPassword)
             {
+                _logger.LogWarning("Login failed for email {Email}: invalid credentials", loginRequestDto.Email);
                 return null;
             } 
             var token =await _tokenService.GenerateJwtTokenAsync(user);
@@ -56,6 +56,7 @@ namespace ResortBooking.API.Services
             var newRefreshToken =await  _tokenService.GenerateRefreshTokenAsync();
             var refreshTokenexpiryDate = DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationMinutes);
             await _tokenService.SaveRefreshTokenAsync(user.Id,jwtTokenId,newRefreshToken, refreshTokenexpiryDate);
+            _logger.LogInformation("User logged in successfully with UserId {UserId}", user.Id);
             var response= new TokenDto
             {
                 AccessToken = token,
@@ -92,7 +93,7 @@ namespace ResortBooking.API.Services
                     await _roleManager.CreateAsync(new IdentityRole(defaultRole));
                 }
                 await _userManager.AddToRoleAsync(user,defaultRole);
-
+                _logger.LogInformation("User registered successfully with UserId {UserId} and Role {Role}", user.Id,defaultRole);
                 var userDto= _mapper.Map<UserDto>(user);
                 userDto.Role = defaultRole;
                 return userDto;
@@ -107,6 +108,7 @@ namespace ResortBooking.API.Services
                 //Token Reuese Detection
                 if (tokenReused)
                 {
+                _logger.LogWarning("Refresh token reuse detected for UserId {UserId}", userId);
                     return null;
                 }
                 //Token Inavlid or Expired

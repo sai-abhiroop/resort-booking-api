@@ -146,12 +146,28 @@ builder.Services.AddAutoMapper(o =>
     o.CreateMap<AmenitiesDetailsDto, VillaAmenities>();
     o.CreateMap<VillaAmenities, CreateAmenitiesDto>().ReverseMap();
     o.CreateMap<VillaAmenities, UpdateAmenitiesDto>().ReverseMap();
+    o.CreateMap<CreateBookingDto, Booking>();
+    o.CreateMap<Booking, BookingDetailsDto>()
+     .ForMember(
+            dest => dest.VillaName,
+            opt => opt.MapFrom(src => src.Villa.Name)
+        )
+     .ForMember(
+            dest => dest.UserName,
+            opt => opt.MapFrom(src => src.User.Name)
+        )
+     .ForMember(
+            dest => dest.Status,
+            opt => opt.MapFrom(src => src.Status.ToString())
+        );
+
 });
 builder.RegisterAuthService();
 builder.RegisterImageService();
 builder.RegisterTokenService();
 builder.RegisterVillaService();
 builder.RegisterAmenitiesService();
+builder.RegisterBookingsService();
 
 var app = builder.Build();
 

@@ -12,12 +12,14 @@ namespace ResortBooking.API.Services
         private readonly ApplicationContext _db;
         private readonly IMapper _mapper;
         private readonly IImageService _imageService;
+        private readonly ILogger<VillaService> _logger;
 
-        public VillaService(ApplicationContext db,IMapper mapper,IImageService imageService)
+        public VillaService(ApplicationContext db,IMapper mapper,IImageService imageService,ILogger<VillaService> logger)
         {
             _db = db;
             _mapper = mapper;
             _imageService = imageService;
+            _logger=logger;
         }
 
         public async Task<PaginationResultDto<VillaDetailsDto>> GetVillasAsync(string? filterBy, string? filterQuery, string? sortBy, string? sortOrder, int page, int pageSize)
@@ -148,6 +150,7 @@ namespace ResortBooking.API.Services
             villa.CreatedDate = DateTime.UtcNow;
             await _db.Villa.AddAsync(villa);
             await _db.SaveChangesAsync();
+            _logger.LogInformation("Villa created successfully with Id {VillaId} and Name {VillaName}", villa.Id, villa.Name);
             var response = _mapper.Map<VillaDetailsDto>(villa);
             return response;
         }
@@ -180,6 +183,7 @@ namespace ResortBooking.API.Services
                 }
             }
             await _db.SaveChangesAsync();
+            _logger.LogInformation("Villa with Id {VillaId} updated successfully", villa.Id);
             return true;
         }
 
@@ -193,6 +197,7 @@ namespace ResortBooking.API.Services
             var imageUrl = villa.ImageUrl;
             _db.Villa.Remove(villa);
             await _db.SaveChangesAsync();
+            _logger.LogInformation("Villa with Id {VillaId} deleted successfully", villa.Id);
             if (!string.IsNullOrEmpty(imageUrl))
             {
                 await _imageService.DeleteImageAsync(imageUrl);
